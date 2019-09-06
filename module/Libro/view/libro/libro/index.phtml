@@ -21,7 +21,6 @@
          <td><?php echo $libro->getNombre();?></td>
          <td><?php echo $libro->getPrecio();?></td>
 
-         <td><a href="<?php echo $this->url('libro',['action' => 'view', 'id' => $libro->getId()]);?>" class="label label-success">VER</a></td>
          
          <td><a href="<?php echo $this->url('libro',['action' => 'edit', 'id' => $libro->getId()]);?>" class="label label-primary">ACTUALIZAR</a></td>
        
