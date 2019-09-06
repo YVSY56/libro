@@ -1,0 +1,22 @@
+<?php
+
+$title = 'Eliminar libro';
+$url   = $this->url('libro', ['action' => 'delete', 'id' => $id]);
+
+$this->headTitle($title);
+?>
+<h1><?= $this->escapeHtml($title) ?></h1>
+
+<p>
+    ¿Esta seguro de que quiere eliminar el libro
+    "<?= $this->escapeHtml($libro->nombre) ?>" con precio
+    "<?= $this->escapeHtml($libro->precio) ?>"?
+</p>
+
+<form action="<?= $url ?>" method="post">
+<div class="form-group">
+    <input type="hidden" name="id" value="<?= (int) $libro->id ?>" />
+    <input type="submit" class="btn btn-danger" name="del" value="Yes" />
+    <input type="submit" class="btn btn-success" name="del" value="No" />
+</div>
+</form>
