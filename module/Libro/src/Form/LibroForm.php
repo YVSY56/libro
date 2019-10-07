@@ -2,6 +2,7 @@
 
 namespace  Libro\Form;
 
+use Zend\Form\Element;
 use Zend\Form\Form;
 
 class LibroForm extends Form{
@@ -10,6 +11,13 @@ class LibroForm extends Form{
         // We will ignore the name provided to the constructor
         parent::__construct('libro');
 
+                //mandamos a traer el metodo post
+
+        $this->setAttributes(array(
+            'method' => 'post',
+            //identificacion del formulario
+            'id'     => 'form'
+        ));
 
         $this->add([
             'name' => 'id',
@@ -33,7 +41,7 @@ class LibroForm extends Form{
             'name' => 'submit',
             'type' => 'submit',
             'attributes' => [
-                'value' => 'Go',
+                'value' => 'Agregar',
                 'id'    => 'submitbutton',
             ],
         ]);

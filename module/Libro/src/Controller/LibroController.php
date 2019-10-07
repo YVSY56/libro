@@ -6,22 +6,23 @@
 */
 
 namespace Libro\Controller;
-
-use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
+use Zend\Mvc\Controller\AbstractActionController;
+use Libro\Services\LibroService;
 use Libro\Form\LibroForm;
-use Libro\Model\Libro;
+
 
 class LibroController extends AbstractActionController{
+   
    protected $table;
    
-   public function __construct($table){
-           $this->table =$table;
+   public function __construct(){
+           $this->table =new LibroService();
 
    }
    public function indexAction(){
       
-       $libros = $this->table->fetchAll();
+       $libros = $this->table->getAllLibro();
        
        return new ViewModel(['libros' => $libros]);
    
@@ -29,26 +30,15 @@ class LibroController extends AbstractActionController{
     public function addAction(){
      
         $form = new LibroForm();
-        $form->get('submit')->setValue('Add');
+        if($this->getRequest()->isPost()){
+           $formData =$this->getRequest()->getPost();
+           $libro=$this->table->agregarLibro($formData);
+           if($libro){
+               $this->redirect()->toUrl($this->getRequest()->getBAseUrl().'/libro');
 
-        $request = $this->getRequest();
-
-        if (! $request->isPost()) {
-            return ['form' => $form];
+           }
         }
-
-        $libro = new Libro();
-        $form->setInputFilter($libro->getInputFilter());
-        $form->setData($request->getPost());
-
-        if (! $form->isValid()) {
-            return ['form' => $form];
-        }
-
-        $libro->exchangeArray($form->getData());
-        $this->table->saveLibro($libro);
-        return $this->redirect()->toRoute('libro');
-
+       return array('form'=>$form); 
    }
 
 
@@ -58,71 +48,35 @@ class LibroController extends AbstractActionController{
    }
 
    public function deleteAction(){
-      
-     $id = (int) $this->params()->fromRoute('id', 0);
-        if (!$id) {
-            return $this->redirect()->toRoute('libro');
-        }
 
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-            $del = $request->getPost('del', 'No');
-
-            if ($del == 'Yes') {
-                $id = (int) $request->getPost('id');
-                $this->table->deleteLibro($id);
-            }
-
-            // Redirect to list of albums
-            return $this->redirect()->toRoute('libro');
-        }
-
-        return [
-            'id'    => $id,
-            'libro' => $this->table->getLibro($id),
-        ];
+    $id = $this->params()->fromRoute("id");
+    $libro = $this->table->eliminarLibro($id);
+    //redirecciona al index del listado.
+    return $this->redirect()->toUrl($this->getRequest()->getBaseUrl().'/libro/');
     }
 
     public function editAction(){
 
-      $id = (int) $this->params()->fromRoute('id', 0);
-
-        if (0 === $id) {
-            return $this->redirect()->toRoute('libro', ['action' => 'add']);
+    $form = new LibroForm();
+    #recupera id
+    $id = $this->params()->fromRoute("id");
+    //echo $id_user; exit;
+    $libro = $this->table->getLibroById($id);
+    //carga los valores al formulario
+    $form-> setData($libro);
+    //para que nos muestre el formulario
+    if ($this->getRequest()->isPost()) {
+      # recuperar datos
+      $formData = $this->getRequest()->getPost();
+      //imprime
+      //echo "<pre>"; print_r($formData);exit;
+      $libro = $this->table->actualizarLibro($formData);
+        if ($libro) {
+          # valida que la variable tenga algo para regresarlo.
+          $this->redirect()->toUrl($this->getRequest()->getBAseUrl().'/libro');
         }
-
-        // Retrieve the album with the specified id. Doing so raises
-        // an exception if the album is not found, which should result
-        // in redirecting to the landing page.
-        try {
-            $libro = $this->table->getLibro($id);
-        } catch (\Exception $e) {
-            return $this->redirect()->toRoute('libro', ['action' => 'index']);
-        }
-
-        $form = new LibroForm();
-        $form->bind($libro);
-        $form->get('submit')->setAttribute('value', 'Edit');
-
-        $request = $this->getRequest();
-        $viewData = ['id' => $id, 'form' => $form];
-
-        if (! $request->isPost()) {
-            return $viewData;
-        }
-
-        $form->setInputFilter($libro->getInputFilter());
-        $form->setData($request->getPost());
-
-        if (! $form->isValid()) {
-            return $viewData;
-        }
-
-        $this->table->saveLibro($libro);
-
-        // Redirect to album list
-        return $this->redirect()->toRoute('libro', ['action' => 'index']);
+    }
+    return array('form'=>$form);
    }
-
        
 }

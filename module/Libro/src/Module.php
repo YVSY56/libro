@@ -1,42 +1,31 @@
 <?php
     namespace Libro;
-    use Zend\Db\Adapter\AdapterInterface;
-    use Zend\Db\ResultSet\ResultSet;
-    use Zend\Db\TableGateway\TableGateway;
-    use Zend\ModuleManager\Feature\ConfigProviderInterface;
+    use Zend\Mvc\ModuleRouteListener;
+    use Zend\Mvc\MvcEvent;
 
-    class Module implements ConfigProviderInterface{
-        
-        public function getConfig(){
-            return include __DIR__ . '/../config/module.config.php';
-        }
-        public function getServiceConfig(){
-            return [
-                'factories' => [
-                    Model\LibroTable::class => function($container) {
-                        $tableGateway = $container->get(Model\LibroTableGateway::class);
-                        return new Model\LibroTable($tableGateway);
-                    },
-                    Model\LibroTableGateway::class => function ($container) {
-                        $dbAdapter = $container->get(AdapterInterface::class);
-                        $resultSetPrototype = new ResultSet();
-                        $resultSetPrototype->setArrayObjectPrototype(new Model\Libro());
-                        return new TableGateway('libro', $dbAdapter, null, $resultSetPrototype);
-                    },
-                ],
-            ];
-        }
-        public function getControllerConfig(){
+    class Module{
+    public function onBootstrap(MvcEvent $e){
+        $serviceManager = $e->getApplication()->getServiceManager();
+        $dbAdapter = $serviceManager->get('Zend\Db\Adapter\Adapter');
+        \Zend\Db\TableGateway\Feature\GlobalAdapterFeature::setStaticAdapter($dbAdapter);
 
-            return [
-                'factories' => [
-                    Controller\LibroController::class => function($container) {
-                        return new Controller\LibroController(
-                            $container->get(Model\LibroTable::class)
-                        );
-                    },
-                ],
-            ];
-        }
+        $eventManager        = $e->getApplication()->getEventManager();
+        $moduleRouteListener = new ModuleRouteListener();
+        $moduleRouteListener->attach($eventManager);
     }
+
+    public function getConfig(){
+        return include __DIR__ . '/../config/module.config.php';
+    }
+
+    public function getAutoloaderConfig(){
+        return array(
+            'Zend\Loader\StandardAutoloader' => array(
+                'namespaces' => array(
+                    __NAMESPACE__ => __DIR__ . '/src/' . __NAMESPACE__,
+                ),
+            ),
+        );
+    }
+  }
 ?>
